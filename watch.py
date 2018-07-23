@@ -14,7 +14,7 @@ my_camera = PiCamera()      # initializing the camera module
 my_camera.resolution = (640,480)        # resolution of the camera
 my_camera.framerate = 32        # framerate of the camera
 rawCapture = PiRGBArray(my_camera, size = my_camera.resolution)     # setting up the interfacing option
-time.sleep(1)       # wait one second for everything to settle down
+sleep(1)       # wait one second for everything to settle down
 
 for frame in my_camera.capture_continuous(rawCapture, format = 'bgr', use_video_port = True):
     raw_image = frame.array.copy()      # getting the image from the camera
