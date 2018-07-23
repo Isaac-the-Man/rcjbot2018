@@ -1,0 +1,2 @@
+print('Utility initialized')
+
