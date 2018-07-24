@@ -1,7 +1,7 @@
 from time import sleep
 import cv2
-import Utils
-import infos
+from Utils import Filter
+from infos import Filter_type
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
@@ -20,7 +20,7 @@ for frame in my_camera.capture_continuous(rawCapture, format = 'bgr', use_video_
     my_filter.set_filter_type(Filter_type.Grey)
     grey_img = my_filter.perform(raw_img.copy())
     my_filter.set_filter_type(Filter_type.Threshold)
-    thres_img = my_filter.perform(grey_img.copy())
+    _, thres_img = my_filter.perform(grey_img.copy())
 
     cv2.imshow('Stream', thres_img)     # showing of the image
     key = cv2.waitKey(1)&0xFF       # setting 'q' as the signal for exiting

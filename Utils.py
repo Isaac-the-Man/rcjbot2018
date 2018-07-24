@@ -30,12 +30,12 @@ class Filter(object):
         elif self.filter == Filter_type.Bilateral:      # Bilateral filter, waiting for editing
             print('')
             return img
-        elif self.filter_type == Filter_type.Threshold:     # wating for further editing
-            new_img = cv2.threshold(img, self.Threshold_min, self.Threshold_max, cv2.THRESH_BINARY_INVERSE)
+        elif self.filter == Filter_type.Threshold:     # wating for further editing
+            new_img = cv2.threshold(img, self.Threshold_min, self.Threshold_max, cv2.THRESH_BINARY_INV)
             return new_img
         else:
-            self.filter_type =
+            self.filter_type = None
 
     def set_filter_type(self, filter_type):     # Must call this function to set filter type before perform
         self.filter = filter_type
-        print('filter type set')
+        #print('filter type set')
