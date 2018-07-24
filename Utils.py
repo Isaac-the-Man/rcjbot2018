@@ -11,7 +11,7 @@ class Filter(object):
     """docstring for Filter."""
     def __init__(self):
         self.filter = None      # THis saves the filter chosed to perform
-        self.Gaussian_kernels = (11, 11)        # Gausian kernels used for blurring, check the url for more info
+        self.Gaussian_kernels = (17, 17)        # Gausian kernels used for blurring, check the url for more info
         self.Threshold_max = 255
         self.Threshold_min = 110
 
