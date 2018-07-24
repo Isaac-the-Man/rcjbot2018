@@ -13,7 +13,7 @@ class Filter(object):
         self.filter = None      # THis saves the filter chosed to perform
         self.Gaussian_kernels = (11, 11)        # Gausian kernels used for blurring, check the url for more info
         self.Threshold_max = 255
-        self.Threshold_min = 60
+        self.Threshold_min = 110
 
     def perform(self, img):
         if self.filter == None:
