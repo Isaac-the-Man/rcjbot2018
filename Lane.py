@@ -6,14 +6,6 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 
 
-def filter_field():
-    my_filter.set_filter_type(Filter_type.Gaussian)
-    blur_img = my_filter.perform(raw_img.copy())
-    my_filter.set_filter_type(Filter_type.Grey)
-    grey_img = my_filter.perform(blur_img.copy())
-    my_filter.set_filter_type(Filter_type.Threshold)
-    _, thres_img = my_filter.perform(grey_img.copy())
-
 print('Watching You Right Now')
 
 my_camera = PiCamera()      # initializing the camera module
@@ -25,9 +17,16 @@ sleep(1)       # wait one second for everything to settle down
 
 for frame in my_camera.capture_continuous(rawCapture, format = 'bgr', use_video_port = True):
     raw_img = frame.array.copy()      # getting the image from the camera
-    filter_field()
 
-    cv2.imshow('Stream', thres_img)     # showing of the image
+    # field filters
+    my_filter.set_filter_type(Filter_type.Gaussian)
+    blur_img = my_filter.perform(raw_img.copy())
+    my_filter.set_filter_type(Filter_type.Grey)
+    grey_img = my_filter.perform(blur_img.copy())
+    my_filter.set_filter_type(Filter_type.Threshold)
+    _, thresh_img = my_filter.perform(grey_img.copy())
+
+    cv2.imshow('Stream', thresh_img)     # showing of the image
     key = cv2.waitKey(1)&0xFF       # setting 'q' as the signal for exiting
     rawCapture.truncate(0)
     if key == ord('q'):     # if the key is 'q'
