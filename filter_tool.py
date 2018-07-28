@@ -21,7 +21,7 @@ def setup_trackbars(filter):        # take in filter to decide the format of the
             cv2.createTrackbar('%s' %i, 'Trackbars', v, 255, callback)      # create the tracbars for thresholding
         elif filter == 'HSV':
             for j in str(filter):
-                cv2.createTrackbar('%s_%s' %(i, j), 'Trackbars', v, 255, callback)      # trackbar for hsv
+                cv2.createTrackbar('%s_%s' %(i, j), 'Trackbars', 180 if i == 'Max' and j == 'H' else v, 255 if j != 'H' else 180, callback)      # trackbar for hsv
 
 def get_arguments():
     ap = argparse.ArgumentParser()
