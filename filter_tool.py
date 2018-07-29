@@ -54,7 +54,8 @@ def main():
     args = get_arguments()
 
     if args['image'] != None:       # read the image if path is given
-        frame = cv2.imread(str(args['image']))
+        raw = cv2.imread(str(args['image']))
+        frame = cv2.resize(raw, (640,480))
         video_mode = False
     else:
         vid = cv2.VideoCapture(0)     # if no img path is given, stream vido mode will be on
