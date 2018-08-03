@@ -46,24 +46,53 @@ def first_filter(frame):        # perform some basic filter such as thresholding
 
     return  raw_img, threshed_img
 
+def make_checkpoint(analyzed_list, checkpoint_list):      # draw and filter out checkpoints
+    slice_num = len(analyzed_list)       # number of slices
+    effective_radius = 150      # effecitive range restrict dramatic movement of the points
+
+    checkpoint_list[::-1]     # now reverse it to go from bottom to top
+    analyzed_list[::-1]
+
+    for i in range(slice_num):
+        cv2.circle(analyzed_list[0],checkpoint_list[0],7,(255,0,0),-1)     # draw the center of mass of the bottomest point
+        cv2.line(analyzed_list[0], (checkpoint_list[0][0]-effective_radius,checkpoint_list[0][1]), (checkpoint_list[0][0]+effective_radius,checkpoint_list[0][1]),(0,0,255),5)
+
+        if i+1 < slice_num:     # if the checkpoint is not the last checkpoint
+            coord1 = checkpoint_list[i]
+            coord2 = checkpoint_list[i+1]
+
+            effective_range = [coord1[0]-effective_radius,coord1[0]+effective_radius]       # set the effective rane
+            if coord2[0] >= effective_range[0] and coord2[0] <= effective_range[1]:     # if it is in range
+                cv2.circle(analyzed_list[i+1], checkpoint_list[i+1], 7,(255,0,0),-1)        # center of mass
+                cv2.line(analyzed_list[i+1], (checkpoint_list[i+1][0]-effective_radius,checkpoint_list[i+1][1]), (checkpoint_list[i+1][0]+effective_radius,checkpoint_list[i+1][1]),(0,0,255),5)    # draw the range
+
+    return analyzed_list
+
+
 def analyze(f_slice, uf_slice):     # analyze the slice for to get a moment point
     # cv2.Canny(file, kernelwidth, kernelheight)
     #canny_slice = cv2.Canny(f_slice.copy(), 70, 70)
+
+    effective_radius = 150       # effecitive range restrict dramatic movement of the points
+
     _,cnts,_ = cv2.findContours(f_slice,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)      # contour it
-    main_cnts = max(cnts, key=cv2.contourArea)      # find the contour with the biggest area
-    cv2.drawContours(uf_slice,cnts,-1,(0,255,0),5)
 
-    M = cv2.moments(main_cnts)
-    if M['m00']==0:
-        contourCenterX = 0
-        contourCenterY = 0
-    else:
-        contourCenterX = int(M['m10']/M['m00'])
-        contourCenterY = int(M['m01']/M['m00'])
+    if len(cnts) > 0:        # Make sure that there is at least one count
+        main_cnts = max(cnts, key=cv2.contourArea)      # find the contour with the biggest area
+        cv2.drawContours(uf_slice,cnts,-1,(0,255,0),5)
 
-    cv2.circle(uf_slice,(contourCenterX,contourCenterY),7,(255,0,0),-1)
+        M = cv2.moments(main_cnts)      # calculate the center of mass
+        if M['m00']==0:
+            contourCenterX = 0
+            contourCenterY = 0
+        else:
+            contourCenterX = int(M['m10']/M['m00'])
+            contourCenterY = int(M['m01']/M['m00'])
 
-    return uf_slice        # return the analyzed sice
+        cv2.circle(uf_slice,(contourCenterX,contourCenterY),7,(255,0,0),-1)     # draw the center of mass
+        cv2.line(uf_slice, (contourCenterX-effective_radius,contourCenterY), (contourCenterX+effective_radius,contourCenterY),(0,0,255),5)        # draw out the effecitive rane
+
+    return uf_slice, contourCenterX, contourCenterY        # return the analyzed sice
 
 def repack_slice(unwanted, raw_slice = []):       # repack the previous sliced images back into the original image
     raw_slice.insert(0, unwanted)       # insert the unwanted image as the first element of the slice list
@@ -100,8 +129,13 @@ def main():
         filtered_slice_list = slice_img(filtered_ROI.copy())     # slice the image into several slices for further analysis
 
         analyzed_list = []
+        checkpoint_list = []
         for i in range(len(slice_list)):
-            analyzed_list.append(analyze(filtered_slice_list[i], slice_list[i]))        # analyze and return the slice
+            analyzed_slice, centerX, centerY = analyze(filtered_slice_list[i], slice_list[i])
+            analyzed_list.append(analyzed_slice)        # analyze and return the slice
+            checkpoint_list.append((centerX,centerY))       # add the centers for further analysis
+
+        analyzed_list = make_checkpoint(analyzed_list, checkpoint_list)       # draw the center of mass, connect the lines, and filter out noises
 
         repacked_img = repack_slice(up_img, analyzed_list)     # repack the image with contours
 
