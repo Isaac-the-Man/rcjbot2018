@@ -58,7 +58,7 @@ def get_weighted(mid_points, angles, angles_ys):        # calculate the weighted
         weighted_shifts.append(weighted_shift)
 
     for i in range(len(angles)):
-        weighted_tan = angles[i]*angles_ys*weighted_tan
+        weighted_tan = angles[i]*angles_ys[i]*weight_tan
         weighted_tans.append(weight_tan)
 
     return weighted_shifts, weighted_tans
@@ -100,24 +100,27 @@ def main():
                     x1, y1, x2, y2 = line[0]
                     cv2.line(ROI_img, (x1,y1), (x2,y2), (0,255,0), 5)
 
-                mid_points = get_midpoint(lines)        # get the coordinates of the midpoints of lines
-                if len(mid_points) > 0:
-                    for points in mid_points:
-                        cv2.circle(ROI_img, points, 1, (255,0,0))      # draw the midpoints
-
-                angles, angles_ys = get_angles(lines)      # get the slope of all of the lines
-
-                w_shifts, w_tans = get_weighted(mid_points, angles, angles_ys)      # get the weighted machines states
-
-                show_vote()
-
-        except TypeError:
+        except TypeError as e:
             print('No lines found')
+            print(e)
+
+        mid_points = get_midpoint(lines)        # get the coordinates of the midpoints of lines
+        if len(mid_points) > 0:
+            for points in mid_points:
+                cv2.circle(ROI_img, points, 1, (255,0,0))      # draw the midpoints
+
+        angles, angles_ys = get_angles(lines)      # get the slope of all of the lines
+
+        w_shifts, w_tans = get_weighted(mid_points, angles, angles_ys)      # get the weighted machines states
 
         output = np.concatenate((up_img, ROI_img.copy()), axis = 0)
         cv2.imshow('output', output)        # show the output image
         if cv2.waitKey(1) & 0xFF is ord('q'):       # waiting for the user to quit
             break
+
+    cv2.destroyAllWindows()
+    show_vote(w_shifts, w_tans)
+    plt.show(block = True)
 
 if __name__ == '__main__':
     main()      # run main
