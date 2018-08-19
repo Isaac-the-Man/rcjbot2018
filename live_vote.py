@@ -71,6 +71,18 @@ def show_vote(w_shifts, w_tans):
     plt.grid()
     plt.ion()
 
+def get_machine_state(w_shifts, w_tans):        # return the machine state by averaging the vote out
+    machine_state = (0,0)       # machine state  = (shift, theta)
+
+    np_w_shifts = np.array(w_shifts)
+    np_w_tans = np.array(w_tans)
+    shifts_mean = np.mean(np_w_shifts)
+    tans_mean = np.mean(np_w_tans)
+    machine_state = (shifts_mean, float(tans_mean*180/np.pi))        # assign the machine state
+    print(machine_state)
+
+    return machine_state
+
 def main():
 
     vid = cv2.VideoCapture(0)       # set the video mode
@@ -101,18 +113,20 @@ def main():
                     x1, y1, x2, y2 = line[0]
                     cv2.line(ROI_img, (x1,y1), (x2,y2), (0,255,0), 5)
 
+            mid_points = get_midpoint(lines)        # get the coordinates of the midpoints of lines
+            if len(mid_points) > 0:
+                for points in mid_points:
+                    cv2.circle(ROI_img, points, 1, (255,0,0))      # draw the midpoints
+
+            angles, angles_ys = get_angles(lines)      # get the slope of all of the lines
+
+            w_shifts, w_tans = get_weighted(mid_points, angles, angles_ys)      # add weight on the votes
+
+            mahcine_state = get_machine_state(w_shifts, w_tans)     # get the weighted machine state
+
         except TypeError as e:
             print('No lines found')
             print(e)
-
-        mid_points = get_midpoint(lines)        # get the coordinates of the midpoints of lines
-        if len(mid_points) > 0:
-            for points in mid_points:
-                cv2.circle(ROI_img, points, 1, (255,0,0))      # draw the midpoints
-
-        angles, angles_ys = get_angles(lines)      # get the slope of all of the lines
-
-        w_shifts, w_tans = get_weighted(mid_points, angles, angles_ys)      # get the weighted machines states
 
         output = np.concatenate((up_img, ROI_img.copy()), axis = 0)
         cv2.imshow('output', output)        # show the output image
