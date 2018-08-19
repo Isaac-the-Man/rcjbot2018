@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 
 weight_shift = float(1/250)     # for altering the shift received
-weight_tan = float(1/240)       # for altering the tan received
+weight_tan = float(1/180)       # for altering the tan received
 tan_digit = int(5)
 
 def get_ROI(image):     # get the region of interest, in this case, ROI is the bottom half of the image
@@ -36,7 +36,7 @@ def get_angles(lines):       # get the angle of the car using tangent
         for line in lines:
             x1, y1, x2, y2 = line[0]
             slope = float((x2 - x1)/(y2 - y1))        # calculate the individual slope
-            avg_y = float((y2 - y1)/2)
+            avg_y = float((y2 + y1)/2)
             slopes.append(slope)
             avg_ys.append(avg_y)
         np_slopes = np.array(slopes)
@@ -58,8 +58,9 @@ def get_weighted(mid_points, angles, angles_ys):        # calculate the weighted
         weighted_shifts.append(weighted_shift)
 
     for i in range(len(angles)):
-        weighted_tan = angles[i]*angles_ys[i]*weight_tan
-        weighted_tans.append(weight_tan)
+        weighted_tan = float(angles[i]*angles_ys[i]*weight_tan)
+        #print('%s x %s x %s' %(str(angles[i]),str(angles_ys[i]),str(weight_tan)))
+        weighted_tans.append(weighted_tan)
 
     return weighted_shifts, weighted_tans
 
