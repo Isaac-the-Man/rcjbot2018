@@ -66,6 +66,11 @@ def get_weighted(mid_points, angles, angles_ys):        # calculate the weighted
 
 def show_vote(w_shifts, w_tans):
     plt.scatter(w_shifts, w_tans)      # graph them on the vote graph in the form of a scatter plot
+    print(np.mean(w_shifts),np.mean(w_tans))       # this is the mid point's coordinates
+    print(str(np.round(np.mean(w_shifts)/300*100,5)) + '% on shift',end = ' ')       # percentage of movemnt
+    print('right' if np.mean(w_shifts) < 0 else 'left')        # direction of movement
+    print(str(np.round(np.mean(w_tans)/1.7*100,5)) + '% on turn',end = ' ')       # percentage of movemnt
+    print('right' if np.mean(w_tans) < 0 else 'left')       # direction of movemnt
     plt.xticks([-300,0,300],['L','MID','R'])
     plt.yticks([-1.7,0,1.7],['-tan(-90)','straight','tan(90)'])
     plt.grid()

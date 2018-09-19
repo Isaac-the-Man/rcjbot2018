@@ -67,7 +67,11 @@ def show_vote(mid_points, angles):        # show the voting graph for maneuverin
 
     if len(angles) == len(shift):       # this should be equal since they came from the same peice of information
         plt.scatter(shift, arctan)      # graph them on the vote graph in the form of a scatter plot
-        print(arctan)
+        print(np.mean(shift),np.mean(arctan))       # this is the mid point's coordinates
+        print(str(np.round(np.mean(shift)/300*100,5)) + '% on shift',end = ' ')       # percentage of movemnt
+        print('right' if np.mean(shift) < 0 else 'left')
+        print(str(np.round(np.mean(arctan)/1.7*100,5)) + '% on turn',end = ' ')       # percentage of movemnt
+        print('right' if np.mean(arctan) < 0 else 'left')
         plt.xticks([-300,0,300],['L','MID','R'])
         plt.yticks([-1.7,0,1.7],['-tan(-90)','straight','tan(90)'])
         plt.grid()
