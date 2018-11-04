@@ -90,6 +90,9 @@ def main():
     height = int(HEIGHT/scale)
     width = int(WIDTH/scale)
     raw_img = cv2.resize(raw_img.copy(), (width, height))
+    print('Original size: %d * %d' %(WIDTH,HEIGHT))
+    print('Scaled size: %d * %d' %(width,height))
+
 
     grey_img = cv2.cvtColor(raw_img.copy(), cv2.COLOR_BGR2GRAY)     # convert the color to grayscale
     _,threshed_img = cv2.threshold(grey_img.copy(),THRESHED_LOW,THRESHED_HIGH,cv2.THRESH_BINARY_INV)     # threshold inversely (make black white and white back)
@@ -105,7 +108,7 @@ def main():
             x1, y1, x2, y2 = line_seg[0]
             cv2.line(raw_img, (x1,y1), (x2,y2), (0,255,0), 5)
             slopes.append((x2-x1)/((y2-y1)+SLOPE_EPSILON))
-            midpoints.append((x1+x2)/2 - WIDTH/2)
+            midpoints.append((x1+x2)/2 - width/2)
     np_slopes = np.array(slopes)
     np_midpoints = np.array(midpoints)
     np_slopes = np.arctan(np_slopes.copy())
