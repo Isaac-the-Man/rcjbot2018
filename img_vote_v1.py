@@ -24,10 +24,12 @@ HOUGHLINE_A_RESOLUTION = np.pi/180
 HOUGHLINE_THRESH = 20
 HOUGHLINE_MIN_LINE_LEN = 20
 SLOPE_EPSILON = 0.00001
-SHIFT_K = 0.7
+SHIFT_K = 0.5
 ANGLE_K = 1
 ACTIVATION_BIAS = 0
 DIRECTION_DIAL_LEN = 100
+ROI_INIT_PORTION = 0.5
+ROI_SIGN_CHANGE_BATCH = 5
 
 # Define global constant
 WIDTH = None
@@ -40,6 +42,50 @@ def get_arguments():
     ap.add_argument('-s', '--size', required = True, help = 'scale factor of output')
     args = vars(ap.parse_args())        # take in the arguments
     return args
+
+def get_cusp(oriented_slopes):
+    # get original sign
+    mean_slope = oriented_slopes[0:5]
+    sum = 0
+    for i in mean_slope:
+        sum += i[1]
+    mean = sum/5
+    print('mean: ' + str(mean))
+
+    batch_counter = 0
+    loop_counter = 0
+    if (mean >= 0):     # positive origin
+        print('positive origin')
+        for i in oriented_slopes:
+            loop_counter += 1
+            slope = i[1]
+            if (slope < 0):
+                batch_counter += 1
+            else:
+                batch_counter = 0
+            if (batch_counter >= ROI_SIGN_CHANGE_BATCH):
+                print('loop_counter: %d' %loop_counter)
+                return oriented_slopes[loop_counter - ROI_SIGN_CHANGE_BATCH][0]
+    else:       # negative origin
+        print('negative origin')
+        for i in oriented_slopes:
+            loop_counter += 1
+            slope = i[1]
+            if (slope > 0):
+                batch_counter += 1
+            else:
+                batch_counter = 0
+            if (batch_counter >= ROI_SIGN_CHANGE_BATCH):
+                print('loop_counter: %d' %loop_counter)
+                return oriented_slopes[loop_counter - ROI_SIGN_CHANGE_BATCH][0]
+    return False
+
+def get_ROI(img):
+    h, w = img.shape[:2]       # get the geometry of the image
+    slice_h = int(h*ROI_INIT_PORTION)
+    rest_img = img[0:slice_h,0:w]
+    ROI = img[slice_h:h,0:w]
+    return ROI, rest_img, slice_h, w
 
 def activation_func(x):
     y = (np.pi/2)/(1+(np.e)**(-14*(x-0.5)))
@@ -75,7 +121,7 @@ def get_direction_vector(img, angle, shift, h, w):
 
     cv2.line(img, (int(w/2), h), (x_final,y_final), (0,0,255), 5)
 
-    print(final_turn*180/np.pi)
+    print('Final turn: %d degree' %int(final_turn*180/np.pi))
     print((x_final,  y_final))
 
 def main():
@@ -86,7 +132,7 @@ def main():
     raw_img = cv2.imread(path)
 
     # image scaling
-    HEIGHT, WIDTH = raw_img.shape[:2]       # get the geometry of the image
+    raw_img,_,HEIGHT,WIDTH = get_ROI(raw_img.copy())
     height = int(HEIGHT/scale)
     width = int(WIDTH/scale)
     raw_img = cv2.resize(raw_img.copy(), (width, height))
@@ -102,20 +148,32 @@ def main():
     # DRAW OUT all the lines found on the piciture and find the slope and find the average shift
     slopes = []
     midpoints = []
+    oriented_slopes = []        # slope from bottom to top, for getting the correct ROI
     print('FOUND ' + str(len(lines_detected)) + ' LINES')
     if len(lines_detected)>0:
         for line_seg in lines_detected:
             x1, y1, x2, y2 = line_seg[0]
             cv2.line(raw_img, (x1,y1), (x2,y2), (0,255,0), 5)
-            slopes.append((x2-x1)/((y2-y1)+SLOPE_EPSILON))
-            midpoints.append((x1+x2)/2 - width/2)
+            slope = (x2-x1)/((y2-y1)+SLOPE_EPSILON)
+            midpoint = (x1+x2)/2 - width/2
+            slopes.append(slope)
+            midpoints.append(midpoint)
+            oriented_slopes.append([(y2+y1)/2, slope])        # (y_coord, slope)
     np_slopes = np.array(slopes)
     np_midpoints = np.array(midpoints)
     np_slopes = np.arctan(np_slopes.copy())
     masked_slopes = np.ma.masked_equal(np_slopes, 0)        # masked out slopes that equals to zero
+    oriented_slopes.sort(reverse=True)
 
     avg_angle = np.mean(masked_slopes)*-180/np.pi
     avg_shift = np.mean(np_midpoints)
+
+    #print(masked_slopes)
+    for i in oriented_slopes:
+        print(str(i[0]) + ':' + str(i[1]))
+    cusp_y = int(get_cusp(oriented_slopes))
+    cv2.line(raw_img, (0,cusp_y), (width,cusp_y), (255,0,0), 5)
+    print('Sign changing Y: ' + str(cusp_y))
     print("Average Slope: " + str(avg_angle) + " Degree")        # average out the slope
     print('Average Shift: ' + str(avg_shift))
     '''
