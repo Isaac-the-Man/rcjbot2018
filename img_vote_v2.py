@@ -1,7 +1,7 @@
 '''
 This program is for developing the frame base classification of the lane following rcjbot
 pass in a picture file, and it will be processed. The output will return a marked picture
-along with the verbal output describing the movement that should be doneself.
+along with the verbal output describing the movement that should be done.
 '''
 '''
 FLOW GRAPH
@@ -13,8 +13,8 @@ update ROI definition -> repeat:|->| -> direction -> concatenate
 # import essential pacakages
 import cv2
 import numpy as np
-from matplotlib import pyplot
 import argparse
+import time
 
 # Define any hyperparameters here
 THRESHED_LOW = 85
@@ -188,6 +188,9 @@ def main_pipeline(input_img, ROI_update = ROI_INIT_PORTION):
 
 
 def main():
+    # time starts
+    start_t = time.time()
+
     args = get_arguments()
     path = str(args['image'])
     scale = int(args['size'])
@@ -218,6 +221,11 @@ def main():
     cv2.line(output_img, (0,cusp_y), (width,cusp_y), (255,0,0), 5)
 
     cv2.imshow('output', output_img)       # show the outputs
+
+    # time end
+    end_t = time.time()
+    print('Total time: ' + str(end_t - start_t))
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
