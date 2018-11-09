@@ -5,7 +5,8 @@ along with the verbal output describing the movement that should be doneself.
 '''
 '''
 FLOW GRAPH
-raw input -> grayscale -> threshold -> Edge Detection -> Hough line transform -> Slope detection
+raw input -> ROI -> grayscale -> threshold -> Edge Detection -> Hough line transform
+ -> Slope detection -> transform and activate -> direction -> cusp detection
 '''
 
 # import essentail pacakages
