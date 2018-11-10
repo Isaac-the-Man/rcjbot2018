@@ -1,7 +1,8 @@
 '''
 This program is for developing the frame base classification of the lane following rcjbot
 pass in a picture file, and it will be processed. The output will return a marked picture
-along with the verbal output describing the movement that should be done.
+along with the verbal output describing the movement that should be done. The "process()" function
+is for used as a library. Call process() to get an ouput from this script.
 '''
 '''
 FLOW GRAPH
@@ -186,6 +187,33 @@ def main_pipeline(input_img, ROI_update = ROI_INIT_PORTION):
 
     return avg_angle, avg_shift, oriented_slopes, ROI_img, CUT_img
 
+def process(input_img, scale):
+    # read the image
+    raw_img = input_img
+
+    # image scaling
+    scaled_img, height, width = scale_img(raw_img, scale)
+
+    # first main pipline
+    _, _, oriented_slopes, _, _ = main_pipeline(scaled_img.copy(), ROI_INIT_PORTION)
+
+    # cusp detection
+    cusp_y = int(get_cusp(oriented_slopes) + height*ROI_INIT_PORTION)
+    updated_ROI_portion = cusp_y/height
+    print('Sign changing Y: ' + str(cusp_y))
+    print('updated ROI portion: ' + str(updated_ROI_portion))
+
+    # updated main pipeline
+    updated_avg_angle, updated_avg_shift, _, updated_ROI_img, updated_CUT_img = main_pipeline(scaled_img.copy(), updated_ROI_portion)
+
+    # get direction
+    get_direction_vector(updated_ROI_img, updated_avg_angle, updated_avg_shift, width, int(height*(1-updated_ROI_portion)))
+
+    # concatenate back to original size
+    output_img = concat_img(updated_CUT_img, updated_ROI_img)
+    cv2.line(output_img, (0,cusp_y), (width,cusp_y), (255,0,0), 5)
+
+    return output_img
 
 def main():
     # time starts
